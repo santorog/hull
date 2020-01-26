@@ -1,1 +1,3 @@
-# hull
+# Hull
+
+Python scripts playground.
