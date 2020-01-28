@@ -3,6 +3,7 @@
 import numpy as np
 import scipy.optimize as sco
 import utilities as ul
+import matplotlib.pyplot as plt
 from functools import partial
 
 ### Evaluation des obligations, taux actuariel, taux au pair
@@ -13,13 +14,13 @@ zc=[0.025,0.029,0.032,0.034]
 cf=[3,3,3,nom+3]
 mat=[1,2,3,4]
 
-def price(cf_c,zc_r, mat_r):
+def price(cf_arr,zc_arr, mat_arr):
     value=0
-    for i in range(len(cf_c)):
-        value += cf_c[i] * np.exp(-mat[i]*zc_r[i])
+    for i in range(len(cf_arr)):
+        value += cf_arr[i] * np.exp(-mat_arr[i]*zc_arr[i])
     return value
 
-print("Le prix est : ",price(cf, zc, mat))
+print("Le prix est : ", round(price(cf, zc, mat),2))
 
 def price_act(r):
     new_zc=np.full(len(cf),r)
@@ -69,7 +70,6 @@ def cf_mat_zc_for_year(f, yearly_coupon, mat, nom, mat_t, zc_t):
 
     return cf_vect, mat_vect, zc_vect
 
-
 def bootstrap(nom_t, mat_t, cp_y_t, pv_t):
 
     size=len(mat_t)
@@ -83,21 +83,15 @@ def bootstrap(nom_t, mat_t, cp_y_t, pv_t):
         cf_vect, mat_vect, zc_vect = cf_mat_zc_for_year(b_f,b_cp_y[i],b_mat[i],b_nom[i],mat_t, b_zc_r)
         idx=len(cf_vect)-1
 
-        print(i)
-        print("CF ", cf_vect)
-        print(" MAT: ", mat_vect)
-        print("ZC : ",zc_vect)
-        print("IDX : ",idx)
-
         pv= price(cf_vect[:idx],zc_vect[:idx],mat_vect[:idx])
 
-        print("PV is : ", pv)
         H=partial(p_except_last, pv, cf_vect[idx], mat_vect[idx], pv_t[i])
 
-        b_zc_r[i]= sco.broyden2(H,0.05)
+        b_zc_r[i]= sco.broyden1(H,0.05)
 
     return b_zc_r
 
-
-print(bootstrap(b_nom,b_mat,b_cp_y,b_pv))
+plt.plot(b_mat,bootstrap(b_nom,b_mat,b_cp_y,b_pv))
+plt.axis([0.,2.2,0.098,0.112])
+plt.show()
 
